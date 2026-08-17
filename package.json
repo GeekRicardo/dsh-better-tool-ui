@@ -1,6 +1,6 @@
 {
   "name": "dsh-hebbian-rows",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "DeepSeek Harness web 插件：把工具调用卡片与 thinking 行渲染成 hebbian desktop 的时间线风格（左侧色轨 + GitHub 风 diff + goal callout）。",
   "type": "module",
   "main": "lib/index.js",
