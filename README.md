@@ -39,7 +39,9 @@ curl -fsSL https://raw.githubusercontent.com/GeekRicardo/dsh-hebbian-rows/main/i
 
 **thinking 行**：紫色轨（`#8c93f8`）+ 与工具行统一的 12px 网格、图标位对齐。
 
-**流式工具预览**：write/edit 等大参数工具在参数流式生成期间，输入框上方出现一行「生成中… + 目标文件 + 已生成字符数」的实时预览，参数流完、正式卡片物化后自动消失。（DSH 的 tool-call 节点在参数流完才物化，这是插件层能拿到的最早信号。）
+**流式工具行**（`conversation.chat.streamingCall` 按名接管）：write/edit 等大参数工具在参数流式生成期间，**消息流里**（正式卡片将要落地的位置，Deep diving 状态行之前）出现一行「生成中… + 目标文件 + 已生成字符数」，展开显示实时内容尾部；参数流完、正式卡片物化后自动让位。该座位由 DSH 原生提供，未被本插件接管的工具名走 DSH 自带的原生流式行。
+
+> 需要 DSH ≥ 声明 `conversation.chat.streamingCall` 的版本；更早的 DSH 上这一行不出现（其余渲染不受影响）。
 
 **间距**：连续工具行 / think 步骤之间 2px 等距贴合（负 margin 抵消聊天列 16px gap），含正文段落的消息不受影响。
 
