@@ -20,7 +20,7 @@ curl -fsSL https://raw.githubusercontent.com/GeekRicardo/dsh-better-tool-ui/main
 
 ## 渲染覆盖
 
-**内置工具行**（`tool.call.toolview` 按名接管，27 个 key）：
+**内置工具行**（`tool.call.toolview` 按名接管，28 个 key）：
 
 | 工具 | 行摘要 | 展开详情 |
 | --- | --- | --- |
@@ -35,6 +35,7 @@ curl -fsSL https://raw.githubusercontent.com/GeekRicardo/dsh-better-tool-ui/main
 | str_replace_editor | 路径（+view_range） | view→内容回放；create/insert→纯新增视图；str_replace→diff 视图 |
 | skill | 技能名 | 内容回放 |
 | workflow / subagent 系列 | description | 输入输出回放 |
+| ask_user_question | 首个问题的 header/正文（多问题时 `N 问`） | 分页问题面板：每页一个问题，选项列表标注用户的选择（多选 `✓` / 单选 `●`），自定义文本单独成行；多个问题在同一面板翻页 |
 
 **MCP 工具行**（`mcp__<server>__<tool>`）：
 
@@ -52,6 +53,8 @@ curl -fsSL https://raw.githubusercontent.com/GeekRicardo/dsh-better-tool-ui/main
 > 本插件不自绘子调用树——那是 DSH 已经在做的事，插件再画一遍就是同一棵树渲染两遍。样式表里只对 `[data-subcalls]` 容器做缩进对齐。
 
 **goal 系列**：`create_goal` 蓝 / `get_goal` 灰 / `update_goal`（complete 绿、blocked 红、pause 黄）callout 色块，直接嵌入消息流。
+
+**ask_user_question**：把 `questions[]`（`id` / `question` / `header` / `options` / `multi_select`）渲染成分页问题面板——每页一个问题，选项列表按答案 `answers[]`（按 `id` 对回，`selected` 是选中的 label 数组）标注用户的选择（多选 `✓` / 单选 `●`），`custom` 自由文本单独成行。多个问题在同一面板内翻页（`‹ 1 / N ›`），回答过的问题标蓝高亮，未回答显示「（未回答）」，等待回答期间显示「等待回答…」。
 
 **thinking 行**：紫色轨（`#8c93f8`）+ 与工具行统一的 12px 网格、图标位对齐。
 
