@@ -1,9 +1,9 @@
 {
-  "name": "dsh-hebbian-rows",
-  "description": "DeepSeek Harness web 插件：工具调用与 thinking 行的 hebbian 风格时间线渲染",
-  "version": "1.4.1",
+  "name": "dsh-better-tool-ui",
+  "description": "DeepSeek Harness web 插件：工具调用（含 MCP）与 thinking 行的时间线渲染",
+  "version": "2.1.0",
   "entry": {
-    "name": "dsh-hebbian-rows",
+    "name": "dsh-better-tool-ui",
     "inject": []
   },
   "client": {

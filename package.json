@@ -1,7 +1,7 @@
 {
-  "name": "dsh-hebbian-rows",
-  "version": "1.4.1",
-  "description": "DeepSeek Harness web 插件：把工具调用卡片与 thinking 行渲染成 hebbian desktop 的时间线风格（左侧色轨 + GitHub 风 diff + goal callout）。",
+  "name": "dsh-better-tool-ui",
+  "version": "2.1.0",
+  "description": "DeepSeek Harness web 插件：把工具调用卡片（含 MCP 工具）与 thinking 行渲染成紧凑时间线（左侧色轨 + GitHub 风 diff + goal callout）。",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -36,7 +36,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/GeekRicardo/dsh-hebbian-rows"
+    "url": "https://github.com/GeekRicardo/dsh-better-tool-ui"
   },
   "peerDependencies": {
     "react": "^18.2.0"

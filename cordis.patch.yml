@@ -1,7 +1,7 @@
-# dsh-hebbian-rows bundle patch
+# dsh-better-tool-ui bundle patch
 #
-# 安装后（dependencies + dsh.profile.bundles 均含 dsh-hebbian-rows），
+# 安装后（dependencies + dsh.profile.bundles 均含 dsh-better-tool-ui），
 # 启动时 profile boot 会合并本 patch，把插件行插入 host composition。
 - insert:
-    - id: dsh-hebbian-rows
-      name: 'dsh-hebbian-rows'
+    - id: dsh-better-tool-ui
+      name: 'dsh-better-tool-ui'
