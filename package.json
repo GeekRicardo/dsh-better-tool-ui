@@ -1,6 +1,6 @@
 {
   "name": "dsh-better-tool-ui",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "DeepSeek Harness web 插件：把工具调用卡片（含 MCP 工具）与 thinking 行渲染成紧凑时间线（左侧色轨 + GitHub 风 diff + goal callout）。",
   "type": "module",
   "main": "lib/index.js",

@@ -20,11 +20,11 @@ curl -fsSL https://raw.githubusercontent.com/GeekRicardo/dsh-better-tool-ui/main
 
 ## 渲染覆盖
 
-**内置工具行**（`tool.call.toolview` 按名接管，19 个 key）：
+**内置工具行**（`tool.call.toolview` 按名接管，27 个 key）：
 
 | 工具 | 行摘要 | 展开详情 |
 | --- | --- | --- |
-| bash | 命令全文 | 深色终端块（`$ 命令` + 尾部输出 + 退出码/信号条） |
+| bash / pwsh | 命令全文 | 深色终端块（`$ 命令` + 尾部输出 + 退出码/信号条），图标沿用 DSH 自带的那枚（`IconApiOutline14`） |
 | read | 相对路径 `:#起-止` | 行号代码块 |
 | write / edit | 文件名 | GitHub 风 diff（文件名头 + 徽标 + +N−M + 行号 + 整行红绿底色） |
 | grep / glob | pattern | 按文件分组的匹配 / 路径列表 |
@@ -34,6 +34,7 @@ curl -fsSL https://raw.githubusercontent.com/GeekRicardo/dsh-better-tool-ui/main
 | subagent / send_message 等 | description / 目标 id | 输入输出回放 |
 | str_replace_editor | 路径（+view_range） | view→内容回放；create/insert→纯新增视图；str_replace→diff 视图 |
 | skill | 技能名 | 内容回放 |
+| workflow / subagent 系列 | description | 输入输出回放 |
 
 **MCP 工具行**（`mcp__<server>__<tool>`）：
 
@@ -41,7 +42,14 @@ curl -fsSL https://raw.githubusercontent.com/GeekRicardo/dsh-better-tool-ui/main
 - 展开后分「参数 / 结果」两段：参数排成 key/value 网格（对象与数组折进 pretty JSON 小块），结果按内容分流——合法 JSON 走轻着色（键/字符串/数字/字面量分色），host 端丢弃字节后留下的 `[image: …]` `[audio: …]` `[resource: …]` 占位行收成 chip，其余按纯文本回放。
 - 调用失败时结果段让位给统一的红色错误块（错误名 · code + 正文），不重复渲染同一段文字。
 
-> MCP 的公开名由用户装了哪些服务器决定，插件里无从枚举，而 keyed 槽位按精确 key 派发。所以插件订阅 `ctx.sessions` 的会话快照，扫出 `mcp__` 开头的调用名后即时补注册，并把认领过的名字存进 `localStorage`，下次启动先行注册——首次遇到某个 MCP 工具时可能闪一帧出厂卡片，之后不会。
+> MCP 的公开名由用户装了哪些服务器决定，插件里无从枚举，而 keyed 槽位按精确 key 派发。所以插件订阅 `ctx.sessions` 的会话快照，扫出出现过的调用名后即时补注册，并把认领过的名字存进 `localStorage`，下次启动先行注册——首次遇到某个工具时可能闪一帧出厂卡片，之后不会。
+
+**subagent / workflow 内部的工具**：DSH 的 `ToolCallTree` 会把一次调用的 `subCalls` 递归展开成同级兄弟节点，每个子调用**单独**过一次 `tool.call.toolview` 派发——所以子调用本来就会落到本插件的行上。麻烦在于名字：子调用带的是**驱动那一侧**的工具名，例如 `claude-in-dsh` 驱动时是 `Bash` / `Read` / `TodoWrite` / `Task` 这种大驼峰，而 keyed 槽位按精确 key 派发，这些名字过去全部落到出厂通用卡片。现在两头都补上了：
+
+- **名字归一**：渲染分派统一先过 `canonicalName()`——大驼峰拆成蛇形小写，再走一张别名表（`Task`/`Agent` → `subagent`，`MultiEdit` → `edit`，`BashOutput` → `job_output`，`SlashCommand` → `skill` …）。同一个工具无论出现在哪一层，都落到同一套图标 / 描述 / 摘要 / 详情渲染。
+- **补位认领**：会话快照里出现过的**所有**工具名都会被认领（不再只认 `mcp__` 开头的），但注册用的是**正的 priority**，只补位、不抢占。DSH 出厂的通用卡片是槽位的 fallback、不占 key，所以无主的名字归本插件；而 DSH 的专用视图、以及别的插件（例如 `claude-in-dsh` 给 `Task` / `Agent` / `Workflow` 注册的行）都在 priority 0，照旧胜出。
+
+> 本插件不自绘子调用树——那是 DSH 已经在做的事，插件再画一遍就是同一棵树渲染两遍。样式表里只对 `[data-subcalls]` 容器做缩进对齐。
 
 **goal 系列**：`create_goal` 蓝 / `get_goal` 灰 / `update_goal`（complete 绿、blocked 红、pause 黄）callout 色块，直接嵌入消息流。
 
@@ -81,7 +89,7 @@ DSH web 的 profile（`~/.dsh/profiles/web`）在 boot 时按 `package.json` 的
 
 1. 往 keyed 槽位 `tool.call.toolview` 注册同名 key，**遮蔽**出厂工具卡片（停止插件即恢复，不动出厂代码）；
 2. 往 keyed 槽位 `conversation.chat.streamingCall` 注册同一套 key 接管流式预览行，并在没有该座位的旧版 DSH 上退回 `conversation.input.dock`；
-3. 从会话快照里发现 MCP 工具名并补注册上述槽位；
+3. 从会话快照里发现运行期才知道的工具名（MCP 名、子调用里的驱动侧名字）并**补位**注册上述槽位；
 4. 注入一段样式表，把 DSH 原生 thinking 行（`[data-variant="think"]`）与节点间距调整到统一网格。
 
 全部颜色走 DSH 主题 token（`--dsw-alias-*`），明暗主题自动跟随。
