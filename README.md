@@ -35,7 +35,7 @@ curl -fsSL https://raw.githubusercontent.com/GeekRicardo/dsh-better-tool-ui/main
 | str_replace_editor | 路径（+view_range） | view→内容回放；create/insert→纯新增视图；str_replace→diff 视图 |
 | skill | 技能名 | 内容回放 |
 | workflow / subagent 系列 | description | 输入输出回放 |
-| ask_user_question | 首个问题的 header/正文（多问题时 `N 问`） | 分页问题面板：每页一个问题，选项列表标注用户的选择（多选 `✓` / 单选 `●`），自定义文本单独成行；多个问题在同一面板翻页 |
+| ask_user_question | 首个问题的 header/正文（多问题时 `N 问`） | 分页问题面板：每页一个问题，选项列表按 DSH composer 同款标注选择（单选数字序号 / 多选 checkbox 勾选），自定义文本单独成行；多个问题在同一面板翻页 |
 
 **MCP 工具行**（`mcp__<server>__<tool>`）：
 
@@ -54,7 +54,7 @@ curl -fsSL https://raw.githubusercontent.com/GeekRicardo/dsh-better-tool-ui/main
 
 **goal 系列**：`create_goal` 蓝 / `get_goal` 灰 / `update_goal`（complete 绿、blocked 红、pause 黄）callout 色块，直接嵌入消息流。
 
-**ask_user_question**：把 `questions[]`（`id` / `question` / `header` / `options` / `multi_select`）渲染成分页问题面板——每页一个问题，选项列表按答案 `answers[]`（按 `id` 对回，`selected` 是选中的 label 数组）标注用户的选择（多选 `✓` / 单选 `●`），`custom` 自由文本单独成行。多个问题在同一面板内翻页（`‹ 1 / N ›`），回答过的问题标蓝高亮，未回答显示「（未回答）」，等待回答期间显示「等待回答…」。
+**ask_user_question**：把 `questions[]`（`id` / `question` / `header` / `options` / `multi_select`）渲染成分页问题面板——每页一个问题，选项列表按答案 `answers[]`（按 `id` 对回，`selected` 是选中的 label 数组）标注用户的选择，视觉对齐 DSH 原生 composer：单选数字序号、多选 checkbox 勾选，选中的选项行以原生高亮（浅灰背景 + 描边），`(Recommended)` / `（推荐）` 后缀拆成 badge，`custom` 自由文本单独成行。多个问题在同一面板内翻页（`‹ 1 / N ›`），未回答显示「未回答」，等待回答期间显示「等待回答…」。
 
 **thinking 行**：紫色轨（`#8c93f8`）+ 与工具行统一的 12px 网格、图标位对齐。
 
