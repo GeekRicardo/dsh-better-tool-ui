@@ -55,6 +55,8 @@ swap('var inject = ["slots", "sessions"];', 'var inject = ["slots", "sessions", 
 // 3) 样式：styles.insert 取代 document.head 里的常驻 <style>
 swap(
   `      loadToolCache();
+      var discovery = createToolDiscovery(ctx);
+      var SessionProbe = makeSessionProbe(discovery);
       if (document.getElementById(STYLE_ID) === null) {
         var style = document.createElement("style");
         style.id = STYLE_ID;
@@ -63,6 +65,8 @@ swap(
       }`,
   `      pluginCtx = ctx;
       loadToolCache();
+      var discovery = createToolDiscovery(ctx);
+      var SessionProbe = makeSessionProbe(discovery);
       styles.insert(CSS_TEXT);`,
 )
 

@@ -43,7 +43,11 @@ curl -fsSL https://raw.githubusercontent.com/GeekRicardo/dsh-better-tool-ui/main
 - 展开后分「参数 / 结果」两段：参数排成 key/value 网格（对象与数组折进 pretty JSON 小块），结果按内容分流——合法 JSON 走轻着色（键/字符串/数字/字面量分色），host 端丢弃字节后留下的 `[image: …]` `[audio: …]` `[resource: …]` 占位行收成 chip，其余按纯文本回放。
 - 调用失败时结果段让位给统一的红色错误块（错误名 · code + 正文），不重复渲染同一段文字。
 
-> MCP 的公开名由用户装了哪些服务器决定，插件里无从枚举，而 keyed 槽位按精确 key 派发。所以插件订阅 `ctx.sessions` 的会话快照，扫出出现过的调用名后即时补注册，并把认领过的名字存进 `localStorage`，下次启动先行注册——首次遇到某个工具时可能闪一帧出厂卡片，之后不会。
+> MCP 的公开名由用户装了哪些服务器决定，插件里无从枚举，而 keyed 槽位按精确 key 派发。所以插件订阅会话转录，扫出出现过的调用名后即时补注册，并把认领过的名字存进 `localStorage`，下次启动先行注册——首次遇到某个工具时可能闪一帧出厂卡片，之后不会。
+>
+> 转录的位置随 DSH 版本搬过家：0.1.5 起 Session 快照只剩生命周期与控制状态，会话内容挪进 `ctx.uiConversation.binding(id).target("chat")` 的 `ChatSnapshot.legacy`；更早的版本直接挂在 `ctx.sessions.binding(id).session` 的快照上。两处形状同为 `{ getSnapshot, subscribe }`，插件按序探测（见 `transcriptSource`），所以两版都能认领。`uiConversation` 用 `ctx.get` 取、不进 `inject`：cordis 的 `inject` 是硬依赖，老版本缺这个服务会让整个插件挂起不加载。
+>
+> **「要扫哪个会话」在 0.2.0 换了主人**：Session Controller 退出了导航（`SessionListState` 删掉 `current`、`ISessions` 删掉 `open`，契约注释写明 navigation belongs to view owners），轮询 `ctx.sessions.list` 取当前会话的老路径从此恒为空——动态认领整条链失效，MCP 行全部落回出厂通用卡片。现在反过来由视图告诉插件：往 `conversation.input.dock` 挂一个只返回 `null` 的 session 作用域探针（`SessionProbe`），拿框架递进 props 的 `sessionId` 去订阅该会话的转录。谁渲染着会话，谁就是要扫的会话；该座位在新旧 DSH 上形状一致（`kind: list` / `scope: session` / `props.sessionId`），一条路径覆盖所有版本。
 
 **subagent / workflow 内部的工具**：DSH 的 `ToolCallTree` 会把一次调用的 `subCalls` 递归展开成同级兄弟节点，每个子调用**单独**过一次 `tool.call.toolview` 派发——所以子调用本来就会落到本插件的行上。麻烦在于名字：子调用带的是**驱动那一侧**的工具名，例如 `claude-in-dsh` 驱动时是 `Bash` / `Read` / `TodoWrite` / `Task` 这种大驼峰，而 keyed 槽位按精确 key 派发，这些名字过去全部落到出厂通用卡片。现在两头都补上了：
 
@@ -58,9 +62,7 @@ curl -fsSL https://raw.githubusercontent.com/GeekRicardo/dsh-better-tool-ui/main
 
 **thinking 行**：紫色轨（`#8c93f8`）+ 与工具行统一的 12px 网格、图标位对齐。
 
-**流式工具行**（`conversation.chat.streamingCall` 按名接管，含已认领的 MCP 名）：write/edit 等大参数工具在参数流式生成期间，**消息流里**（正式卡片将要落地的位置）出现一行「生成中… + 目标 + 已生成字符数」，展开显示实时内容尾部；参数流完、正式卡片物化后自动让位。该座位由 DSH 原生提供，未被本插件接管的工具名走 DSH 自带的原生流式行。
-
-> **旧版 DSH 兼容**：`conversation.chat.streamingCall` 是较新的 DSH 才声明的座位（0.1.0-rc.5 及更早没有）。没有它的版本上，同一行改从 `conversation.input.dock` 出场——渲染在输入框上方，内容与逻辑完全一致，只是位置不同。两种形态由座位是否声明仲裁：座位在，dock 行让位；座位不在，dock 行顶上，所以任何一个版本上都只会有一行预览。
+**在途工具行**：DSH v0.40 起移除了 `conversation.chat.streamingCall` 座位，工具调用的在途 / running 态改由 `tool.call.toolview` 派发（block 是 `RunningToolCall`），所以在途行与结果行是同一套渲染，插件不再单独注册流式座位。
 
 **bash 展开的最短停留**：running 的 bash 行自动展开看实时输出，完成后自动收回。亚秒级命令会让这一展一收变成一次闪烁，所以自动展开至少停留 **2 秒**再收。这只推迟折叠——左侧色轨的蓝（运行中）→ 绿（完成）仍按真实完成时刻变色，两者互不影响。
 
@@ -91,8 +93,8 @@ pnpm install
 DSH web 的 profile（`~/.dsh/profiles/web`）在 boot 时按 `package.json` 的 `dsh.profile.bundles` 顺序加载 bundle 包；本包的 `cordis.patch.yml` 往 host composition 插入一行插件，web 端按 `package.json` 的 `dsh.client` 拉取 `lib/client.js` 执行。插件本体只做四件事：
 
 1. 往 keyed 槽位 `tool.call.toolview` 注册同名 key，**遮蔽**出厂工具卡片（停止插件即恢复，不动出厂代码）；
-2. 往 keyed 槽位 `conversation.chat.streamingCall` 注册同一套 key 接管流式预览行，并在没有该座位的旧版 DSH 上退回 `conversation.input.dock`；
-3. 从会话快照里发现运行期才知道的工具名（MCP 名、子调用里的驱动侧名字）并**补位**注册上述槽位；
+2. 往 `conversation.input.dock` 挂一个不渲染内容的 session 作用域探针，拿它 props 里的 `sessionId` 订阅该会话的转录；
+3. 从转录里发现运行期才知道的工具名（MCP 名、子调用里的驱动侧名字）并**补位**注册 `tool.call.toolview`；
 4. 注入一段样式表，把 DSH 原生 thinking 行（`[data-variant="think"]`）与节点间距调整到统一网格。
 
 全部颜色走 DSH 主题 token（`--dsw-alias-*`），明暗主题自动跟随。
