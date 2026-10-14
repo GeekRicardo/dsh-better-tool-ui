@@ -64,6 +64,8 @@ curl -fsSL https://raw.githubusercontent.com/GeekRicardo/dsh-better-tool-ui/main
 
 **在途工具行**：DSH v0.40 起移除了 `conversation.chat.streamingCall` 座位，工具调用的在途 / running 态改由 `tool.call.toolview` 派发（block 是 `RunningToolCall`），所以在途行与结果行是同一套渲染，插件不再单独注册流式座位。
 
+**bash 实时输出**：运行中的 tool block 本身不带任何输出（DSH 只在结果落库后才给），所以终端块改从 job 读：DSH 的每次 bash 调用都登记成一个 job（`kind: bash`，label 为命令），插件经 `ctx.jobs`（job-controller 的 client 服务）订阅该会话的 job 名单，按 label 认出这一行对应的 job 后 `observe` 它的输出 ring——只读、不消费，不影响模型的 `job_output`。cc 会话（claude-in-dsh ≥ 1.13.0）的前台 Bash 由 claude-in-dsh 登记成 `claude-task`（label 取 Bash 的 description 首行），并把 Claude Code 写的 `.output` 跟读进 ring，所以同一套渲染两边都生效。job 不带调用 id，只能按 label 匹配；同 label 并行时取启动时刻最近的那个。`ctx.jobs` 用 `ctx.get` 可选读取，没有该服务的旧版 DSH 退回「结束后一次性出结果」。
+
 **bash 展开的最短停留**：running 的 bash 行自动展开看实时输出，完成后自动收回。亚秒级命令会让这一展一收变成一次闪烁，所以自动展开至少停留 **2 秒**再收。这只推迟折叠——左侧色轨的蓝（运行中）→ 绿（完成）仍按真实完成时刻变色，两者互不影响。
 
 **间距**：连续工具行 / think 步骤之间 2px 等距贴合（负 margin 抵消聊天列 16px gap），含正文段落的消息不受影响。
